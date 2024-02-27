@@ -39,5 +39,5 @@ $ docker run \
   ghcr.io/bonnetn/sqlite-compactor \
   /database.db \
   /dumps \
-  events member_presence
+  my_table1 my_table2
 ```
