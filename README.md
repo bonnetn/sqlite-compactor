@@ -34,10 +34,10 @@ options:
 $ docker run \
   -it \
   --rm \
-  -v "$(pwd)"/database.db:/database.db \
+  -v "$(pwd)"/my_sqlite_database.db:/database.db \
   -v "$(pwd)"/directory_for_dumping_data:/dumps/ \
   ghcr.io/bonnetn/sqlite-compactor \
-  /my_sqlite_database.db \
+  /database.db \
   /dumps \
   events member_presence
 ```
