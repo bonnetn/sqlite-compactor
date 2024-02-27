@@ -23,6 +23,8 @@ class Compactor:
         self.tables = tables
         self.output_directory = output_directory
         self.min_rows_to_compact = min_rows_to_compact
+        logger.debug(
+            f"Created compactor {self.sqlite_database_path=}, {self.tables=}, {self.output_directory=} {self.min_rows_to_compact=}")
 
     def compact(self) -> None:
         initial_database_size = self._get_database_size_mib()
