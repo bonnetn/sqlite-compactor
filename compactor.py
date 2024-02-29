@@ -39,7 +39,8 @@ class Compactor:
         for table_name in self.tables:
             logger.debug(f"Compacting table {table_name!r}")
             try:
-                self.compact_table(start_time, run_id, sqlite3_connection_factory, table_name)
+                rows_compacted = self.compact_table(start_time, run_id, sqlite3_connection_factory, table_name)
+                logger.info(f"Compacted {rows_compacted:,} rows from table {table_name!r}")
             except NotEnoughRowsToCompact as e:
                 logger.info(f"Skipping table {table_name!r} because it has too few rows ({e.row_count:,}) to compact.")
 
@@ -50,7 +51,7 @@ class Compactor:
             f"Vacuumed the database, {initial_database_size=:.3} MiB, {final_database_size=:.3} MiB")
 
     def compact_table(self, start_time: datetime.datetime, run_id: str, sqlite_con_factory: sqlite3.Connection,
-                      table_name: str) -> None:
+                      table_name: str) -> int:
         with sqlite_con_factory as con:
             query = f"DELETE FROM {table_name} RETURNING rowid, *"
             df = pd.read_sql_query(query, con)
@@ -73,6 +74,7 @@ class Compactor:
                 statement = 'INSERT INTO compactions (id, timestamp_ms, file_name, table_name) VALUES (?, ?, ?, ?)'
                 con.execute(statement, (run_id, _get_unix_timestamp_ms(start_time), file_name, table_name))
                 logger.debug("Persisted compaction in the database.")
+                return len(df)
 
             except Exception:
                 logger.warning(f"Failed to write the compaction row in the database. Deleting {file_path!r}")
