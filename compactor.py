@@ -54,7 +54,7 @@ class Compactor:
         with sqlite_con_factory as con:
             query = f"DELETE FROM {table_name} RETURNING rowid, *"
             df = pd.read_sql_query(query, con)
-            logger.debug(f"Read & deleted {len(df):,} rows from {table_name!r}")
+            logger.debug(f"Loaded {len(df):,} rows from {table_name!r}")
 
             if len(df) < self.min_rows_to_compact:
                 raise NotEnoughRowsToCompact(len(df))
