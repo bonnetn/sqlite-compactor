@@ -1,10 +1,9 @@
 import datetime
 import logging
 import os
-import random
 import sqlite3
-import string
 from pathlib import Path
+from ulid import ULID
 
 import pandas as pd
 
@@ -33,7 +32,7 @@ class Compactor:
         _create_compaction_table(sqlite3_connection_factory)
 
         start_time = datetime.datetime.now()
-        run_id = _generate_id(start_time)
+        run_id = str(ULID())
         logger.info(f"Starting compaction with {run_id=}")
 
         for table_name in self.tables:
@@ -52,46 +51,47 @@ class Compactor:
 
     def compact_table(self, start_time: datetime.datetime, run_id: str, sqlite_con_factory: sqlite3.Connection,
                       table_name: str) -> int:
-        with sqlite_con_factory as con:
-            query = f"DELETE FROM {table_name} RETURNING rowid, *"
-            df = pd.read_sql_query(query, con)
-            logger.debug(f"Loaded {len(df):,} rows from {table_name!r}")
+        directory_path = os.path.join(self.output_directory, table_name)
 
-            if len(df) < self.min_rows_to_compact:
-                raise NotEnoughRowsToCompact(len(df))
+        temporary_file_name = f"temp-{run_id}.parquet"
+        temporary_file_path = os.path.join(directory_path, temporary_file_name)
 
-            directory_path = os.path.join(self.output_directory, table_name)
-            Path(directory_path).mkdir(parents=True, exist_ok=True)
-            logger.debug(f"Created directory {directory_path!r}")
+        committed_file_name = f"committed-{run_id}.parquet"
+        committed_file_path = os.path.join(directory_path, committed_file_name)
 
-            file_name = f"{run_id}.parquet"
-            file_path = os.path.join(directory_path, file_name)
-
-            try:
-                df.to_parquet(file_path, engine='pyarrow', compression='gzip')
-                logger.debug(f"Wrote {file_path!r}")
+        try:
+            with sqlite_con_factory as con:
+                query = f"DELETE FROM {table_name} RETURNING *"
+                df = pd.read_sql_query(query, con)
+                if len(df) < self.min_rows_to_compact:
+                    raise NotEnoughRowsToCompact(len(df))
+                logger.debug(f"Loaded {len(df):,} rows from {table_name!r}")
 
                 statement = 'INSERT INTO compactions (id, timestamp_ms, file_name, table_name) VALUES (?, ?, ?, ?)'
-                con.execute(statement, (run_id, _get_unix_timestamp_ms(start_time), file_name, table_name))
-                logger.debug("Persisted compaction in the database.")
+                con.execute(statement, (run_id, _get_unix_timestamp_ms(start_time), committed_file_name, table_name))
+                logger.debug("Wrote compaction entry in the database.")
+
+                Path(directory_path).mkdir(parents=True, exist_ok=True)
+                logger.debug(f"Created directory {directory_path!r}")
+
+                df.to_parquet(temporary_file_path, engine='pyarrow', compression='gzip')
+                logger.debug(f"Wrote {temporary_file_path!r}")
+
+                os.rename(temporary_file_path, committed_file_path)
+                logger.debug(f"Moved {temporary_file_name} to {committed_file_name}.")
+
                 return len(df)
 
-            except Exception:
-                logger.warning(f"Failed to write the compaction row in the database. Deleting {file_path!r}")
-                os.remove(file_path)
-                raise
+        except Exception:
+            logger.debug(f"Failed to commit, cleaning up {temporary_file_path}")
+            _attempt_to_delete(temporary_file_path)
+            raise
 
     def _get_database_size_mib(self):
         return os.stat(self.sqlite_database_path).st_size / 1024 / 1024
 
     def _vacuum_database(self):
         sqlite3.connect(self.sqlite_database_path).execute("VACUUM")
-
-
-def _generate_id(t: datetime.datetime) -> str:
-    iso_date = t.isoformat(timespec='milliseconds')
-    random_id = ''.join(random.choices(string.ascii_lowercase, k=8))
-    return iso_date + "-" + random_id
 
 
 def _create_compaction_table(sqlite_con_factory: sqlite3.Connection):
@@ -103,3 +103,10 @@ def _create_compaction_table(sqlite_con_factory: sqlite3.Connection):
 def _get_unix_timestamp_ms(t: datetime.datetime) -> int:
     ts = (t - datetime.datetime(1970, 1, 1)) / datetime.timedelta(milliseconds=1)
     return int(ts)
+
+
+def _attempt_to_delete(path: str) -> None:
+    try:
+        os.remove(path)
+    except OSError:
+        pass
