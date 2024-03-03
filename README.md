@@ -6,7 +6,7 @@ It deletes all rows from the specified tables, backs them up in a parquet file, 
 
 Useful if you have an app that writes events to a SQLite database, and you want to keep the database small.
 
-**Note**: This script also creates a `compactions` table with the file names of the parquet files created. 
+**Note**: This script also creates a `compactions` table with the file names of the parquet files created.
 It is guaranteed that the parquet files listed in the `compactions` table contain all the rows that were deleted from the SQLite database (exactly once).
 
 ## Usage

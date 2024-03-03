@@ -12,7 +12,7 @@ WORKDIR /app
 COPY pyproject.toml poetry.lock /app/
 RUN /venv/bin/python -m poetry export -f requirements.txt -o /requirements.txt
 
-# Create the virtual environment: 
+# Create the virtual environment:
 FROM build AS build-venv
 COPY --from=requirements-builder /requirements.txt /requirements.txt
 RUN /venv/bin/pip install --disable-pip-version-check -r /requirements.txt
@@ -23,5 +23,3 @@ COPY --from=build-venv /venv /venv
 WORKDIR /app
 COPY sqlite-compactor/main.py sqlite-compactor/compactor.py /app
 ENTRYPOINT ["/venv/bin/python", "-m", "main"]
-
-

@@ -15,4 +15,3 @@ python-ulid = "^2.2.0"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
-
