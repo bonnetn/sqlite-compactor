@@ -21,5 +21,6 @@ RUN /venv/bin/pip install --disable-pip-version-check -r /requirements.txt
 FROM gcr.io/distroless/python3-debian12:latest@sha256:d1427d962660c43d476b11f9bb7d6df66001296bba9577e39b33d2e8897614cd
 COPY --from=build-venv /venv /venv
 WORKDIR /app
-COPY sqlite-compactor/main.py sqlite-compactor/compactor.py /app
+COPY sqlite-compactor/main.py sqlite-compactor/compactor.py sqlite-compactor/query_builder.py /app
+RUN ["/venv/bin/python", "-c", "import duckdb; duckdb.sql('INSTALL sqlite;')"]
 ENTRYPOINT ["/venv/bin/python", "-m", "main"]

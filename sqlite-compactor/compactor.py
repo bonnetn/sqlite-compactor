@@ -2,12 +2,11 @@ import datetime
 import logging
 import os
 import sqlite3
-from pathlib import Path
+import duckdb
 from typing import List
+from query_builder import QueryBuilder, compact_table
 
 from ulid import ULID
-
-import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -37,90 +36,60 @@ class Compactor:
     def compact(self) -> None:
         initial_database_size = self._get_database_size_mib()
 
-        sqlite3_connection_factory = sqlite3.connect(self.sqlite_database_path)
-        _create_compaction_table(sqlite3_connection_factory)
-
-        start_time = datetime.datetime.now()
         run_id = str(ULID())
-        logger.info(f"Starting compaction with {run_id=}")
-
+        tables_to_compact = []
         for table_name in self.tables:
-            logger.debug(f"Compacting table {table_name!r}")
-            try:
-                rows_compacted = self.compact_table(
-                    start_time, run_id, sqlite3_connection_factory, table_name
-                )
+            table_size = self._get_table_size(table_name)
+            if table_size < self.min_rows_to_compact:
                 logger.info(
-                    f"Compacted {rows_compacted:,} rows from table {table_name!r}"
+                    f"Skipping table {table_name!r}, not enough rows to compact ({table_size:,})"
                 )
-            except NotEnoughRowsToCompact as e:
-                logger.info(
-                    f"Skipping table {table_name!r} because it has too few rows ({e.row_count:,}) to compact."
+            else:
+                logger.debug(
+                    f"Table {table_name!r} has {table_size:,} rows, will compact."
                 )
+                tables_to_compact.append(table_name)
+
+        if not tables_to_compact:
+            logger.info("No tables to compact, exiting.")
+            return
+
+        sql = self._create_sql_query(run_id, tables_to_compact)
+        logger.debug("Generated SQL query: \n" + sql)
+
+        logger.info(f"Starting compaction with {run_id=}")
+        with duckdb.connect() as con:
+            con.sql(sql)
 
         self._vacuum_database()
 
         final_database_size = self._get_database_size_mib()
         logger.info(
-            f"Vacuumed the database, {initial_database_size=:.3} MiB, {final_database_size=:.3} MiB"
+            f"Vacuumed the database, {initial_database_size=:,.3f} MiB, {final_database_size=:,.3f} MiB"
         )
 
-    def compact_table(
-        self,
-        start_time: datetime.datetime,
-        run_id: str,
-        sqlite_con_factory: sqlite3.Connection,
-        table_name: str,
-    ) -> int:
-        directory_path = os.path.join(self.output_directory, table_name)
+    def _create_sql_query(self, run_id: str, tables_to_compact: List[str]) -> str:
+        qb = QueryBuilder()
+        qb = qb.load_sqlite_table(self.sqlite_database_path)
+        qb = qb.create_compaction_table()
 
-        temporary_file_name = f"temp-{run_id}.parquet"
-        temporary_file_path = os.path.join(directory_path, temporary_file_name)
+        for table_name in tables_to_compact:
+            file_name = f"{table_name}-{run_id}.parquet"
+            file_path = os.path.join(self.output_directory, file_name)
+            qb = qb.transaction(compact_table(run_id, table_name, file_path, "rowid"))
 
-        committed_file_name = f"committed-{run_id}.parquet"
-        committed_file_path = os.path.join(directory_path, committed_file_name)
-
-        try:
-            with sqlite_con_factory as con:
-                query = f"DELETE FROM {table_name} RETURNING *"
-                df = pd.read_sql_query(query, con)
-                if len(df) < self.min_rows_to_compact:
-                    raise NotEnoughRowsToCompact(len(df))
-                logger.debug(f"Loaded {len(df):,} rows from {table_name!r}")
-
-                statement = "INSERT INTO compactions (id, timestamp_ms, file_name, table_name) VALUES (?, ?, ?, ?)"
-                con.execute(
-                    statement,
-                    (
-                        run_id,
-                        _get_unix_timestamp_ms(start_time),
-                        committed_file_name,
-                        table_name,
-                    ),
-                )
-                logger.debug("Wrote compaction entry in the database.")
-
-                Path(directory_path).mkdir(parents=True, exist_ok=True)
-                logger.debug(f"Created directory {directory_path!r}")
-
-                df.to_parquet(temporary_file_path, engine="pyarrow", compression="gzip")
-                logger.debug(f"Wrote {temporary_file_path!r}")
-
-                os.rename(temporary_file_path, committed_file_path)
-                logger.debug(f"Moved {temporary_file_name} to {committed_file_name}.")
-
-                return len(df)
-
-        except Exception:
-            logger.debug(f"Failed to commit, cleaning up {temporary_file_path}")
-            _attempt_to_delete(temporary_file_path)
-            raise
+        return qb.build()
 
     def _get_database_size_mib(self):
         return os.stat(self.sqlite_database_path).st_size / 1024 / 1024
 
-    def _vacuum_database(self):
-        sqlite3.connect(self.sqlite_database_path).execute("VACUUM")
+    def _get_table_size(self, table_name: str) -> int:
+        with sqlite3.connect(self.sqlite_database_path) as con:
+            return con.execute(f"SELECT COUNT(1) FROM {table_name}").fetchone()[0]
+
+    def _vacuum_database(self) -> None:
+        with sqlite3.connect(self.sqlite_database_path) as con:
+            con.execute("VACUUM")
 
 
 def _create_compaction_table(sqlite_con_factory: sqlite3.Connection):
