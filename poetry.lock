@@ -53,20 +53,24 @@ files = [
     {file = "duckdb-0.10.1-cp39-cp39-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:48d84577216010ee407913bad9dc47af4cbc65e479c91e130f7bd909a32caefe"},
     {file = "duckdb-0.10.1-cp39-cp39-musllinux_1_1_x86_64.whl", hash = "sha256:6e65f00294c3b8576ae651e91e732ea1cefc4aada89c307fb02f49231fd11e1f"},
     {file = "duckdb-0.10.1-cp39-cp39-win_amd64.whl", hash = "sha256:30aa9dbbfc1f9607249fc148af9e6d6fd253fdc2f4c9924d4957d6a535558b4f"},
+    {file = "duckdb-0.10.1.tar.gz", hash = "sha256:0d5b6daa9bb54a635e371798994caa08f26d2f145ebcbc989e16b0a0104e84fb"},
 ]
 
 [[package]]
 name = "python-ulid"
-version = "2.2.0"
+version = "2.3.0"
 description = "Universally unique lexicographically sortable identifier"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "python_ulid-2.2.0-py3-none-any.whl", hash = "sha256:ec2e69292c0b7c338a07df5e15b05270be6823675c103383e74d1d531945eab5"},
-    {file = "python_ulid-2.2.0.tar.gz", hash = "sha256:9ec777177d396880d94be49ac7eb4ae2cd4a7474448bfdbfe911537add970aeb"},
+    {file = "python_ulid-2.3.0-py3-none-any.whl", hash = "sha256:1b6ac5b1fae214502feb50c7535ffa3f7f496f3f2abe73296be6bd0a6976bca5"},
+    {file = "python_ulid-2.3.0.tar.gz", hash = "sha256:28108e5edf56ee981dd75ea12ae7279a8a23bf01514144dda7a64c38143204a5"},
 ]
+
+[package.extras]
+pydantic = ["pydantic (>=2.0)"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11.2"
-content-hash = "e969ef248f45599d8cdff48c0ea887ec0930f5851167d055c5a803c3f7e1300f"
+content-hash = "f60bd9a257261f41db6824e43dd62d9c1b13869c0898e93235b6900052f66dba"
