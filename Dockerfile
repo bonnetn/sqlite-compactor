@@ -1,5 +1,5 @@
 # Base builder:
-FROM debian:12-slim@sha256:dbba581211bf48d8a3f1993ebb825e0c58d914783e13573cb2d25773846ed2f0 AS build
+FROM debian:12-slim@sha256:ad86386827b083b3d71139050b47ffb32bbd9559ea9b1345a739b14fec2d9ecf AS build
 RUN apt-get update && \
     apt-get install --no-install-suggests --no-install-recommends --yes python3-venv gcc libpython3-dev && \
     python3 -m venv /venv && \
