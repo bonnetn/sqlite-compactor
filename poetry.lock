@@ -58,13 +58,13 @@ files = [
 
 [[package]]
 name = "python-ulid"
-version = "2.7.0"
+version = "3.0.0"
 description = "Universally unique lexicographically sortable identifier"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "python_ulid-2.7.0-py3-none-any.whl", hash = "sha256:c81658e382f69bad8c6d365155c4ae21843ae4226b94f72c12d7adcbb545a251"},
-    {file = "python_ulid-2.7.0.tar.gz", hash = "sha256:18eb595885140851a490a95b0da4447911ff69fa9f434732067b97f6956f9fe9"},
+    {file = "python_ulid-3.0.0-py3-none-any.whl", hash = "sha256:e4c4942ff50dbd79167ad01ac725ec58f924b4018025ce22c858bfcff99a5e31"},
+    {file = "python_ulid-3.0.0.tar.gz", hash = "sha256:e50296a47dc8209d28629a22fc81ca26c00982c78934bd7766377ba37ea49a9f"},
 ]
 
 [package.extras]
@@ -73,4 +73,4 @@ pydantic = ["pydantic (>=2.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11.2"
-content-hash = "569bb050cdb1df4d9346e4bcbb04daeb8001101168f217a951adec0aff91b984"
+content-hash = "aafe77a025eb254d4b7497e66d028fbd49834eb1407430a814e823fc5620a33f"
