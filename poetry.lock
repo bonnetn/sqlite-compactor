@@ -49,12 +49,13 @@ all = ["adbc-driver-manager", "fsspec", "ipython", "numpy", "pandas", "pyarrow"]
 
 [[package]]
 name = "python-ulid"
-version = "3.2.0"
+version = "3.2.1"
 description = "Universally unique lexicographically sortable identifier"
 optional = false
 python-versions = ">=3.10"
 files = [
-    {file = "python_ulid-3.2.0-py3-none-any.whl", hash = "sha256:7adfc206cbee3124e176b02b73e0fd19d1c9759e119fd8af7ba264d7d29c6fc0"},
+    {file = "python_ulid-3.2.1-py3-none-any.whl", hash = "sha256:07aa5eb92cdd21195a922f87f4ec5b1fce6448f92e4bfa2d7b7b77345677655a"},
+    {file = "python_ulid-3.2.1.tar.gz", hash = "sha256:b1f0d75b49a2dcb5ebca902c05c71080f87845a0e4ed10bc7c8c8a0c0eb2679d"},
 ]
 
 [package.extras]
@@ -63,4 +64,4 @@ pydantic = ["pydantic (>=2.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11.2"
-content-hash = "2dc44bc70a6955eb9112e5f9a6f5d0f4230638a9ba0178c5f1daed76a87ab62f"
+content-hash = "6718d3a4fe9a6bda63d8429a349eca7900b9d3aa6ce06d24c02d8d84470d26b3"
