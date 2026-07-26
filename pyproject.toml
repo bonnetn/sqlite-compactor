@@ -7,7 +7,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.11.2" #
-python-ulid = "3.2.1"
+python-ulid = "4.0.1"
 duckdb = "^1.0.0"
 
 
