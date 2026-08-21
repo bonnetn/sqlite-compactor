@@ -18,7 +18,7 @@ COPY --from=requirements-builder /requirements.txt /requirements.txt
 RUN /venv/bin/pip install --disable-pip-version-check -r /requirements.txt
 
 # Run python code:
-FROM gcr.io/distroless/python3-debian13:latest@sha256:b340f07acd3692d739cbc28450b8876b4770ee01967aa9e4193c3bcec7bd235e
+FROM gcr.io/distroless/python3-debian13:latest@sha256:84e04b1c8a7904c81563ea125db995ba321fd330f3731f0a841e2f90757c4667
 COPY --from=build-venv /venv /venv
 WORKDIR /app
 COPY sqlite-compactor/main.py sqlite-compactor/compactor.py sqlite-compactor/query_builder.py /app
