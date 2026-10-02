@@ -6,7 +6,7 @@ authors = ["Nicolas Bonnet <mail@nicolasbon.net>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.11.2" #
+python = "^3.14.8" #
 python-ulid = "4.0.1"
 duckdb = "^1.5.6"
 
