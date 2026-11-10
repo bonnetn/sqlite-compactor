@@ -1,5 +1,5 @@
 # Build and run with the Python version required by pyproject.toml.
-FROM python:3.15-slim AS build
+FROM python:3.15-slim@sha256:65a65fc7b30b06cb6df4930fd4650697cb23f4c2698ab81fc87e4b031bc36928 AS build
 RUN apt-get update && \
     apt-get install --no-install-suggests --no-install-recommends --yes gcc && \
     rm -rf /var/lib/apt/lists/* && \
@@ -19,7 +19,7 @@ COPY --from=requirements-builder /requirements.txt /requirements.txt
 RUN /venv/bin/pip install --disable-pip-version-check -r /requirements.txt
 
 # Run python code:
-FROM python:3.15-slim
+FROM python:3.15-slim@sha256:65a65fc7b30b06cb6df4930fd4650697cb23f4c2698ab81fc87e4b031bc36928
 COPY --from=build-venv /venv /venv
 WORKDIR /app
 COPY sqlite-compactor/main.py sqlite-compactor/compactor.py sqlite-compactor/query_builder.py /app
